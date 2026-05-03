@@ -1,0 +1,23 @@
+CREATE DATABASE IF NOT EXISTS flight_db;
+USE flight_db;
+
+DROP TABLE IF EXISTS flight;
+DROP TABLE IF EXISTS air_flight;
+
+CREATE TABLE flight(
+    fno INT,
+    year INT,
+    dest STRING,
+    delay FLOAT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+
+ALTER TABLE flight RENAME TO air_flight;
+
+ALTER TABLE air_flight ADD COLUMNS (source STRING);
+
+CREATE INDEX flight_index
+ON TABLE air_flight(fno)
+AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler'
+WITH DEFERRED REBUILD;

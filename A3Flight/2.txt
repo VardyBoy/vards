@@ -1,0 +1,8 @@
+CREATE EXTERNAL TABLE flight_ext(
+    id INT,
+    name STRING,
+    salary FLOAT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/user/hive/external_data';

@@ -1,0 +1,106 @@
+# Imports
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load dataset
+df = pd.read_csv('AirQuality_visualization.csv', delimiter=';')
+
+# Rename columns
+df.rename(columns={
+    'T': 'Temperature',
+    'RH': 'Relative Humidity',
+    'AH': 'Absolute Humidity'
+}, inplace=True)
+
+# Drop unwanted columns
+df.drop(['Unnamed: 15', 'Unnamed: 16'], axis=1, inplace=True)
+
+# Convert columns (safe conversion)
+cols_to_convert = ['CO(GT)', 'C6H6(GT)', 'Temperature',
+                   'Relative Humidity', 'Absolute Humidity']
+
+for col in cols_to_convert:
+    df[col] = df[col].astype(str).str.replace(',', '.').astype(float)
+
+# Remove duplicates
+df.drop_duplicates(inplace=True)
+
+# Handle missing values
+df.fillna(df.mean(numeric_only=True), inplace=True)
+
+# Convert Date column properly
+df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y')
+
+# Extract Year and Month
+df['Year'] = df['Date'].dt.year
+df['Month'] = df['Date'].dt.month
+
+# Fix humidity scaling
+df['Absolute Humidity'] = df['Absolute Humidity'] * 100
+
+# ---- OUTLIER REMOVAL (FIXED) ----
+def remove_outliers(df, col):
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    return df[(df[col] >= Q1 - 1.5*IQR) & (df[col] <= Q3 + 1.5*IQR)]
+
+cols = ['Temperature','Relative Humidity','Absolute Humidity',
+        'PT08.S4(NO2)','PT08.S5(O3)','C6H6(GT)',
+        'PT08.S2(NMHC)','PT08.S1(CO)']
+
+for col in cols:
+    df = remove_outliers(df, col)
+
+# ---------------- VISUALIZATION ----------------
+
+# Correlation heatmap (numeric only)
+plt.figure(figsize=(10,8))
+sns.heatmap(df.select_dtypes(include=np.number).corr(),
+            annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.show()
+
+
+# Line plots
+plt.figure()
+sns.lineplot(data=df, x="Year", y="Temperature")
+plt.show()
+
+plt.figure()
+sns.lineplot(data=df, x="Month", y="Temperature")
+plt.show()
+
+plt.figure()
+sns.lineplot(data=df, x="Year", y="Absolute Humidity")
+plt.show()
+
+plt.figure()
+sns.lineplot(data=df, x="Month", y="CO(GT)")
+plt.show()
+
+
+# Bar plots
+plt.figure()
+sns.barplot(data=df, x="Year", y="Temperature")
+plt.show()
+
+plt.figure()
+sns.barplot(data=df, x="Month", y="CO(GT)")
+plt.show()
+
+
+# Scatter plots
+plt.figure()
+sns.scatterplot(data=df, x='PT08.S1(CO)', y='PT08.S5(O3)', hue='Year')
+plt.show()
+
+plt.figure()
+sns.scatterplot(data=df, x='NO2(GT)', y='NOx(GT)', hue='Month')
+plt.show()
+
+plt.figure()
+sns.scatterplot(data=df, x='PT08.S1(CO)', y='PT08.S2(NMHC)', hue='Year')
+plt.show()

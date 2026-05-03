@@ -1,0 +1,30 @@
+import requests
+from bs4 import BeautifulSoup
+
+# Send request to website
+url = "https://books.toscrape.com/catalogue/page-1.html"
+response = requests.get(url)
+
+# Parse HTML
+soup = BeautifulSoup(response.text, "html.parser")
+
+# Find all books
+books = soup.find_all("article", class_="product_pod")
+
+# Loop through each book
+for book in books:
+    
+    # Get book name
+    name = book.h3.a["title"]
+    
+    # Get rating
+    rating = book.p["class"][1]
+    
+    # Get price
+    price = book.find("p", class_="price_color").text
+    
+    # Print extracted data
+    print("Name:", name)
+    print("Rating:", rating)
+    print("Price:", price)
+    print("-" * 40)
